@@ -32,3 +32,27 @@ classifier:
   input_size: [224, 224]
   vote_frames: 5            # votación temporal (robustez)
   confidence_threshold: 0.85
+
+
+# configs/vision.yaml  (añadir al final o dentro)
+mock:
+  enabled: true
+  period_s: 3.0           # alterna vacío/objeto cada 3 segundos
+  add_noise: true
+  draw_roi_border: false
+
+
+classifier:
+  model_path: "models/classifier_v1.onnx"   # si no existe, usa heurística
+  input_size: [224, 224]
+# Mapeo de fallback por color (HSV):
+heuristic_map:
+  red: "A"
+  blue: "B"
+  green: "C"
+
+mock:
+  enabled: true
+  period_s: 3.0
+  add_noise: true
+  draw_roi_border: false

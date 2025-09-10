@@ -72,11 +72,13 @@ class SimArm(RobotArm):
             self._connected = True
             self._state = "idle"
             self._fault = None
+        print("[SimArm] Conectado (simulado)")
 
     def disconnect(self) -> None:
         with self._lock:
             self._connected = False
             self._state = "idle"
+        print("[SimArm] Desconectado (simulado)")
 
     def is_connected(self) -> bool:
         return self._connected
@@ -87,10 +89,13 @@ class SimArm(RobotArm):
 
     def _enforce_limits(self, x: float, y: float, z: float) -> None:
         if not (self._x_lim[0] <= x <= self._x_lim[1]):
+            print(f"[SimArm] ERROR: X fuera de límites: {x} mm (perm: {self._x_lim})")
             raise RobotError(f"X fuera de límites: {x} mm (perm: {self._x_lim})")
         if not (self._y_lim[0] <= y <= self._y_lim[1]):
+            print(f"[SimArm] ERROR: Y fuera de límites: {y} mm (perm: {self._y_lim})")
             raise RobotError(f"Y fuera de límites: {y} mm (perm: {self._y_lim})")
         if not (self._z_lim[0] <= z <= self._z_lim[1]):
+            print(f"[SimArm] ERROR: Z fuera de límites: {z} mm (perm: {self._z_lim})")
             raise RobotError(f"Z fuera de límites: {z} mm (perm: {self._z_lim})")
 
     def _distance3(self, x: float, y: float, z: float) -> float:
@@ -102,18 +107,20 @@ class SimArm(RobotArm):
     def _move_to(self, x: float, y: float, z: float, speed_mm_s: float) -> bool:
         with self._lock:
             if not self._connected:
+                print("[SimArm] ERROR: No conectado")
                 raise RobotError("SimArm no conectado")
             self._enforce_limits(x, y, z)
             self._state = "moving"
             self._fault = None
 
+        print(f"[SimArm] Moviendo a X={x:.1f} Y={y:.1f} Z={z:.1f} a {speed_mm_s:.1f} mm/s")
         dist = self._distance3(x, y, z)
         speed = max(speed_mm_s, 1e-3)
         duration_s = dist / speed
 
         # Simular movimiento con timeout
         if duration_s * 1000.0 > self._timeout_move_ms:
-            # dormir hasta timeout, luego marcar error
+            print(f"[SimArm] ERROR: Timeout de movimiento ({duration_s*1000:.0f} ms > {self._timeout_move_ms} ms)")
             self._sleep_ms(self._timeout_move_ms)
             with self._lock:
                 self._state = "error"
@@ -128,11 +135,13 @@ class SimArm(RobotArm):
             self._pos["X"], self._pos["Y"], self._pos["Z"] = x, y, z
             self._state = "idle"
             self._fault = None
+        print(f"[SimArm] Llegó a destino X={x:.1f} Y={y:.1f} Z={z:.1f}")
         return True
 
     # --------- Poses y velocidades ---------------
     def home(self) -> bool:
         # Si hay pose HOME, usarla; si no, subir Z a un valor seguro y volver al centro.
+        print("[SimArm] Moviendo a HOME")
         if "HOME" in self._poses:
             return self.move_named("HOME")
         center_x = (self._x_lim[0] + self._x_lim[1]) / 2.0
@@ -141,10 +150,13 @@ class SimArm(RobotArm):
         return self._move_to(center_x, center_y, safe_z, self._default_speed_mm_s)
 
     def move_named(self, pose: str) -> bool:
+        print(f"[SimArm] Moviendo a pose nombrada: {pose}")
         if not self._caps.named_poses:
+            print(f"[SimArm] ERROR: Driver no soporta poses nombradas")
             raise RobotError("Este driver no soporta poses nombradas")
         target = self._poses.get(pose)
         if not target:
+            print(f"[SimArm] ERROR: Pose desconocida: {pose}")
             raise RobotError(f"Pose desconocida: {pose}")
 
         x = float(target.get("X", self._pos["X"]))
@@ -168,7 +180,9 @@ class SimArm(RobotArm):
         yaw: Optional[float] = None,
         speed: Optional[float] = None,
     ) -> bool:
+        print(f"[SimArm] Movimiento cartesiano a X={x:.1f} Y={y:.1f} Z={z:.1f}")
         if not self._caps.cartesian_moves:
+            print(f"[SimArm] ERROR: Driver no soporta movimientos cartesianos")
             raise RobotError("Este driver no soporta movimientos cartesianos")
         # Si viene 'speed', asumimos mm/min (consistente con G-code 'F')
         speed_mm_s = self._default_speed_mm_s if speed is None else (float(speed) / 60.0)
@@ -177,24 +191,29 @@ class SimArm(RobotArm):
     # --------- Pinza / efector final -------------
     def open_gripper(self) -> bool:
         if self._caps.gripper == "none":
-            # No hay pinza; actuar como éxito no-operativo
+            print("[SimArm] Pinza: no disponible (none)")
             return True
-        # Simular tiempo de acción
+        print("[SimArm] Abriendo pinza...")
         self._sleep_ms(self._grip_action_ms)
         with self._lock:
             self._gripper_state = "open"
+        print("[SimArm] Pinza abierta")
         return True
 
     def close_gripper(self) -> bool:
         if self._caps.gripper == "none":
+            print("[SimArm] Pinza: no disponible (none)")
             return True
+        print("[SimArm] Cerrando pinza...")
         self._sleep_ms(self._grip_action_ms)
         with self._lock:
             self._gripper_state = "closed"
+        print("[SimArm] Pinza cerrada")
         return True
 
     # --------- Seguridad / estado ----------------
     def stop(self) -> None:
+        print("[SimArm] Parada de emergencia (stop)")
         with self._lock:
             # En simulación: simplemente marcar estado y fault
             self._state = "idle"

@@ -4,6 +4,7 @@ import os
 import sys
 import time
 from typing import Any, Dict, List, Tuple
+from vision.classifier import build_classifier
 
 try:
     import yaml  # PyYAML
@@ -127,6 +128,86 @@ def make_dummy_vision(cfg: Dict[str, Any]) -> VisionBundle:
     )
 
 
+# ------------------------ Visión real o mock (con soporte de mock) -------------------------
+# app.py (reemplaza make_real_vision por esta versión que soporta mock)
+from vision.presence import PresenceDetector
+from vision.camera import Camera
+from vision.mock_source import MockCamera
+
+def make_vision(cfg: Dict[str, Any]) -> VisionBundle:
+    vcfg = cfg.get("vision") or {}
+    clf = build_classifier(cfg)
+    use_mock = bool(vcfg.get("use_mock") or (cfg.get("mock") if False else False))
+    # también leemos vision.yaml si tiene el bloque 'mock'
+    mock_cfg = (cfg.get("mock") or {})
+    
+    def classify_batch(frames: List[Any]) -> Tuple[str, float]:
+        # frames son ROIs BGR (np.ndarray) que nos da PresenceDetector
+        return clf.predict(frames)
+    # Si la fusión no dejó 'mock' en la raíz, probamos en configs/vision.yaml:
+    # (nuestro loader no mezcla automáticamente ese bloque, así que miramos raw)
+    # Mejor: detectemos desde vision.yaml directamente:
+    try:
+        import yaml, os
+        if os.path.exists("configs/vision.yaml"):
+            with open("configs/vision.yaml","r",encoding="utf-8") as f:
+                vraw = yaml.safe_load(f) or {}
+            if isinstance(vraw, dict) and "mock" in vraw:
+                mock_cfg = vraw.get("mock") or {}
+                use_mock = bool(mock_cfg.get("enabled", False))
+    except Exception:
+        pass
+
+    camera_id = int(vcfg.get("camera_id", 0))
+    resolution = tuple(vcfg.get("resolution", (1280, 720)))
+    exposure_fixed = vcfg.get("exposure_fixed", None)
+    white_balance_fixed = vcfg.get("white_balance_fixed", None)
+    roi_px = tuple(vcfg.get("roi_px", (500, 200, 320, 320)))
+    method = str(vcfg.get("presence_method", "bgdiff"))
+    stable_ms = int(vcfg.get("presence_stable_ms", 350))
+
+    if use_mock:
+        cam = MockCamera(
+            resolution=resolution,
+            roi_px=roi_px,
+            period_s=float(mock_cfg.get("period_s", 3.0)),
+            add_noise=bool(mock_cfg.get("add_noise", True)),
+            draw_roi_border=bool(mock_cfg.get("draw_roi_border", False)),
+        )
+        cam.open()
+    else:
+        cam = Camera(
+            camera_id=camera_id,
+            resolution=resolution,
+            exposure_fixed=exposure_fixed,
+            white_balance_fixed=white_balance_fixed,
+        )
+        cam.open()
+
+    pres = PresenceDetector(
+        camera=cam,
+        roi_px=roi_px,
+        method=method,
+        stable_ms=stable_ms,
+    )
+
+    def wait_presence(stable_ms_param: int) -> bool:
+        return pres.wait_presence(stable_ms_param)
+
+    def capture_batch(n_frames: int) -> List[Any]:
+        return pres.capture_batch(n_frames)
+
+    def classify_batch(frames: List[Any]) -> Tuple[str, float]:
+        # Por ahora seguimos con la clase "A" fija. Luego enchufamos ONNX.
+        return "A", 0.97
+
+    return VisionBundle(
+        wait_presence=wait_presence,
+        capture_batch=capture_batch,
+        classify_batch=classify_batch,
+    )
+
+
 # ------------------------------ Main loop --------------------------------
 def main() -> None:
     print("[APP] Iniciando main()...")
@@ -159,8 +240,11 @@ def main() -> None:
         z_drop=float(safety_cfg.get("z_drop", 20.0)),
     )
 
-    print("[APP] Creando visión dummy...")
-    vision = make_dummy_vision(cfg)
+    print("[APP] Creando visión...")
+    #vision = make_dummy_vision(cfg)
+    vision = make_vision(cfg)
+
+
 
     print("[APP] Configurando telemetría...")
     telemetry = TelemetryOptions(
