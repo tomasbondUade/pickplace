@@ -1,0 +1,36 @@
+# configs/poses_sim.yaml
+# Poses "enseñadas" para el simulador (mm). Ajustá a tu base física cuando migres a un robot real.
+
+poses:
+  # Punto de inicio/espera, alto y despejado
+  HOME: { X: 20, Y: 220, Z: 150, F: 3000 } # 3000 mm/min ≈ 50 mm/s
+
+  # Zona de PICK en el centro de la mesa
+  PICK_SAFE:     { X: 160, Y: 120, Z: 120, F: 1200 }
+  PICK_Z:        { X: 160, Y: 120, Z: 10,  F: 600  }
+
+  # Caja A (arriba-derecha)
+  BOX_A_SAFE:    { X: 280, Y: 40,  Z: 120, F: 1200 }
+  BOX_A_Z:       { X: 280, Y: 40,  Z: 20,  F: 600  }
+
+  # Caja B (abajo-derecha)
+  BOX_B_SAFE:    { X: 280, Y: 200, Z: 120, F: 1200 }
+  BOX_B_Z:       { X: 280, Y: 200, Z: 20,  F: 600  }
+
+  # Caja C (arriba-izquierda)
+  BOX_C_SAFE:    { X: 40,  Y: 40,  Z: 120, F: 1200 }
+  BOX_C_Z:       { X: 40,  Y: 40,  Z: 20,  F: 600  }
+
+  # Caja de revisión / descarte (abajo-izquierda)
+  BOX_REVIEW_SAFE: { X: 60,  Y: 180, Z: 120, F: 1200 }
+  BOX_REVIEW_Z:    { X: 60,  Y: 180, Z: 20,  F: 600  }
+
+speeds:
+  # Pueden ser ignoradas por algunos drivers; igual es útil dejarlas aquí.
+  default: 1200   # “crucero” (SAFE)
+  approach: 600   # acercamiento/descenso (Z)
+
+# Notas:
+# - PICK_SAFE y BOX_*_SAFE son alturas para navegar sin chocar.
+# - *_Z son alturas de contacto/soltado (cercanas a la mesa o al fondo de la caja).
+# - Si tu pinza necesita más margen, subí Z_SAFE/Z en estas poses.

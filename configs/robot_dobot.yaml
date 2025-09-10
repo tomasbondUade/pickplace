@@ -1,0 +1,4 @@
+# Ejemplo de configuración para otro brazo (SDK/RTDE)
+port: COM4
+baudrate: 9600
+sdk: dobot

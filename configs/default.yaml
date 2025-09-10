@@ -1,0 +1,62 @@
+# configs/default.yaml
+# Config general del sistema Pick&Place (portátil / multi-robot)
+
+app:
+  name: "PickPlace"
+  version: "0.1.0"
+
+robot:
+  # Por ahora arrancamos con el simulador para validar todo el flujo.
+  driver: "sim"                          # sim | gcode | dobot | ur | xarm ...
+  config_file: "configs/robot_sim.yaml"  # lo creamos después
+  poses_file:  "configs/poses_sim.yaml"  # lo creamos después
+
+vision:
+  camera_id: 0                 # 0 suele ser la webcam principal
+  resolution: [1280, 720]      # mantené 16:9 o 4:3; estable
+  # Fijar exposición/white balance evita que cambie con la luz del lugar
+  exposure_fixed: null         # ej: -6 (OpenCV), o null para dejar default
+  white_balance_fixed: null    # ej: 4600 (K), o null
+  # ROI en píxeles [x, y, w, h] donde cae el objeto (la ajustamos luego)
+  roi_px: [500, 200, 320, 320]
+  fiducials: true              # si tu base tiene ArUco/AprilTag, dejalo en true
+  normalize_roi_with_fiducials: true
+  model_path: "models/classifier_v1.onnx"   # lo ponemos luego
+  input_size: [224, 224]       # tamaño esperado por el clasificador
+  presence_method: "bgdiff"    # bgdiff | edges
+  presence_stable_ms: 350      # anti-ruido: tiempo mínimo “ocupado”
+  bg_capture_on_start: true    # saca foto de fondo al iniciar
+
+dispatch:
+  classes: ["A", "B", "C"]     # nombres de clases que va a devolver el modelo
+  confidence_threshold: 0.85   # τ: bajo esto → UNKNOWN
+  vote_frames: 5               # votación temporal (reduce falsos)
+  class_to_box:
+    A: "BOX_A"
+    B: "BOX_B"
+    C: "BOX_C"
+    UNKNOWN: "BOX_REVIEW"
+
+run:
+  safety:
+    # Área permitida (mm) por si un driver admite cartesiano; polígono CCW
+    allowed_area_mm:
+      - [0, 0]
+      - [320, 0]
+      - [320, 240]
+      - [0, 240]
+    z_safe: 120
+    z_pick: 10
+    z_drop: 20
+  logging_dir: "runs/2025-09-10/"
+  autosave_failures: true
+  autosave_frames: false
+
+ui:
+  auto_connect: true
+  show_debug: true
+  buttons:
+    show_align: true
+    show_test: true
+    show_run: true
+    show_stop: true

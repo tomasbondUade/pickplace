@@ -1,0 +1,26 @@
+# configs/robot_sim.yaml
+robot:
+  name: "SimArm v1"
+  capabilities:
+    named_poses: true
+    cartesian_moves: true
+    gripper: "servo_pwm"   # "servo_pwm" | "vacuum" | "relay" | "sdk"
+
+motion:
+  default_speed_mm_s: 120.0   # velocidad “virtual” para estimar tiempos
+  settle_ms: 150               # pausa breve al llegar a una pose
+  timeout_move_ms: 15000        # tiempo máx. por movimiento (simulado)
+
+limits:
+  x_mm: [0, 320]
+  y_mm: [0, 240]
+  z_mm: [0, 180]
+
+gripper:
+  open: 10         # ángulo/duty simulado
+  close: 170
+  action_ms: 300   # tiempo de abrir/cerrar
+
+logging:
+  enable: true
+  level: "info"    # debug | info | warn | error

@@ -1,0 +1,5 @@
+# Configuración de puertos, baudrate, gripper y velocidades para brazo G-code
+port: COM3
+baudrate: 115200
+gripper: true
+speed: 1000

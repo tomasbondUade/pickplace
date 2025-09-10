@@ -1,0 +1,46 @@
+# configs/dispatch.yaml
+labels:
+  # Lista maestra de clases válidas que puede devolver el modelo
+  known: ["A", "B", "C"]
+  # Normalizaciones por si el modelo devuelve variantes
+  normalize:
+    "a": "A"
+    "b": "B"
+    "c": "C"
+    "unknown": "UNKNOWN"
+
+routing:
+  # A qué “caja” (conjunto de poses nombradas) va cada clase
+  map:
+    A: "BOX_A"
+    B: "BOX_B"
+    C: "BOX_C"
+    UNKNOWN: "BOX_REVIEW"
+
+policy:
+  confidence_threshold: 0.85   # τ: debajo de esto es UNKNOWN
+  vote_frames: 5               # mayoría sobre N frames
+  on_unknown: "ROUTE"          # "ROUTE" (a BOX_REVIEW) | "RETRY" | "SKIP"
+  max_retries: 1               # si on_unknown=RETRY, cuántos intentos
+  retry_delay_ms: 400          # espera entre reintentos de captura/clasificación
+
+safety:
+  # Si falla una macro de robot, qué hacer
+  on_macro_fail: "STOP"        # "STOP" | "SKIP_ITEM" | "RETRY_MACRO"
+  macro_retry: 0               # si usás RETRY_MACRO, cantidad de reintentos
+
+telemetry:
+  log_images:
+    enabled: true
+    only_on_failure: true      # guarda imagen si UNKNOWN o macro falla
+  save_dir: "runs/telemetry/"
+  keep_last: 500               # límite de archivos en disco
+
+ui:
+  show_confidence: true
+  show_label: true
+  colors:
+    A: "#2e7d32"
+    B: "#1565c0"
+    C: "#ef6c00"
+    UNKNOWN: "#9e9e9e"
