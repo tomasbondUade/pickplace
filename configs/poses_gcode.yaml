@@ -1,0 +1,15 @@
+poses:
+  HOME:      { X: 0,   E: 0,   Z: 0,   Y: 0,    F: 3000 }
+
+  # Equivalente a tu "G1 X1 E10 Z35"
+  PICK_SAFE: { X: 1,   E: 0,   Z: 120, Y: 0,    F: 3000 }
+  PICK_Z:    { X: 1,   E: 10,  Z: 35,  Y: 0,    F: 900  }
+
+  # Ejemplo de “posición de caja” (ajustá a tu cinemática real)
+  BOX_A_SAFE:{ X: 0,   E: -10, Z: 120, Y: -90,  F: 3000 }
+  BOX_A_Z:   { X: 0,   E: -30, Z: 0,   Y: -180, F: 900  }
+
+  # …
+speeds:
+  default: 3000
+  approach: 900

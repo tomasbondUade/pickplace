@@ -1,5 +1,51 @@
-# Configuración de puertos, baudrate, gripper y velocidades para brazo G-code
-port: COM3
-baudrate: 115200
-gripper: true
-speed: 1000
+robot:
+  name: "GCodeArm"
+  capabilities:
+    named_poses: true
+    cartesian_moves: true
+    gripper: "servo_pwm"
+
+serial:
+  port: ""                 # vacío → autodetección (Arduino/CH340/USB Serial)
+  baudrate: 115200
+  timeout_s: 2.0
+  write_timeout_s: 2.0
+  reset_on_connect: true
+  autodetect: true         # <— NUEVO
+
+protocol:
+  ok_token: "ok"
+  error_token: "error"
+  newline: "\n"
+  comment_prefix: ";"
+  units_cmd: "G21"         # mm
+  abs_mode_cmd: "G90"      # absoluto
+  home_cmd: ""             # si NO tenés G28, dejalo vacío
+  move_cmd_tpl: "G1 {COORDS} F{F:.1f}"   # <— NUEVO (coords dinámicos)
+  axes: ["X","E","Z","Y"]                # <— NUEVO (orden a emitir)
+  dwell_cmd_tpl: "G4 P{ms}"
+  stop_cmd: "M112"
+
+  # Gripper por servo en P2 con M280 (como tu script)
+  gripper_open_cmd:  "M280 P2 S{open_pwm}"
+  gripper_close_cmd: "M280 P2 S{close_pwm}"
+
+motion:
+  default_speed_mm_min: 1800
+  settle_ms: 120
+  move_timeout_ms: 20000
+
+limits:
+  x_mm: [0, 9999]    # ajustá a tus límites reales
+  y_mm: [-9999, 9999]
+  z_mm: [0, 9999]
+
+gripper:
+  type: "servo_pwm"
+  open_pwm: 0         # M280 P2 S0  (abrir)
+  close_pwm: 105      # M280 P2 S105 (cerrar)
+  action_ms: 300
+
+logging:
+  enable: true
+  level: "info"

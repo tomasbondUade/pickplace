@@ -6,10 +6,9 @@ app:
   version: "0.1.0"
 
 robot:
-  # Por ahora arrancamos con el simulador para validar todo el flujo.
-  driver: "sim"                          # sim | gcode | dobot | ur | xarm ...
-  config_file: "configs/robot_sim.yaml"  # lo creamos después
-  poses_file:  "configs/poses_sim.yaml"  # lo creamos después
+  driver: "gcode"
+  config_file: "configs/robot_gcode.yaml"
+  poses_file:  "configs/poses_gcode.yaml"
 
 vision:
   camera_id: 0                 # 0 suele ser la webcam principal

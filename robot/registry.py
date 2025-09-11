@@ -10,7 +10,7 @@ except Exception as e:
 
 from .base import RobotArm, RobotError
 from .sim_arm import SimArm
-# from .gcode_arm import GcodeArm   # cuando lo implementes
+from .gcode_arm import GcodeArm   # cuando lo implementes
 # from .dobot_arm import DobotArm   # cuando lo implementes
 # from .ur_arm import URArm         # cuando lo implementes
 # from .xarm_arm import XArm        # cuando lo implementes
@@ -40,7 +40,7 @@ def _deep_update(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any]:
 
 DRIVER_MAP = {
     "sim": SimArm,
-    # "gcode": GcodeArm,
+    "gcode": GcodeArm,
     # "dobot": DobotArm,
     # "ur": URArm,
     # "xarm": XArm,
